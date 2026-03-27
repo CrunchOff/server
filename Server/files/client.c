@@ -232,7 +232,7 @@ static THREAD_RET THREAD_CALL receiver_thread(void *arg) {
                             .sin_port   = htons(PORT_REGISTRY),
                             .sin_addr.s_addr = inet_addr(g_server_ip)
                         };
-                        sendto(g_reg_sock, &req, sizeof(req), 0,
+                        sendto(g_reg_sock, (const char *)&req, sizeof(req), 0,
                                (struct sockaddr *)&srv, sizeof(srv));
                         break;
                     }
@@ -256,7 +256,7 @@ static THREAD_RET THREAD_CALL heartbeat_thread(void *arg) {
     };
     struct Header hb = {REG_HEARTBEAT, 0};
     while (1) {
-        sendto(g_reg_sock, &hb, sizeof(hb), 0, (struct sockaddr *)&srv, sizeof(srv));
+        sendto(g_reg_sock, (const char *)&hb, sizeof(hb), 0, (struct sockaddr *)&srv, sizeof(srv));
         SLEEP(10000);
     }
     return 0;
@@ -278,7 +278,7 @@ static void register_to_server(void) {
         .sin_port   = htons(PORT_REGISTRY),
         .sin_addr.s_addr = inet_addr(g_server_ip)
     };
-    sendto(g_reg_sock, &pkt, sizeof(pkt), 0, (struct sockaddr *)&srv, sizeof(srv));
+    sendto(g_reg_sock, (const char *)&pkt, sizeof(pkt), 0, (struct sockaddr *)&srv, sizeof(srv));
     printf("[✓] Enregistré sur le serveur sous le nom '%s'\n", g_my_name);
 }
 
@@ -289,7 +289,7 @@ static void unregister_from_server(void) {
         .sin_port   = htons(PORT_REGISTRY),
         .sin_addr.s_addr = inet_addr(g_server_ip)
     };
-    sendto(g_reg_sock, &h, sizeof(h), 0, (struct sockaddr *)&srv, sizeof(srv));
+    sendto(g_reg_sock, (const char *)&h, sizeof(h), 0, (struct sockaddr *)&srv, sizeof(srv));
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
