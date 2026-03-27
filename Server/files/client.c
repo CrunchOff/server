@@ -87,7 +87,7 @@ static void send_message_to(const char *target_ip, const char *msg) {
     struct Header *h = (struct Header *)buf;
     h->type = TYPE_MSG;
     h->seq  = htonl(1);
-    strncpy((char *)(buf + sizeof(struct Header)), msg, PAYLOAD_SIZE - 1);
+    snprintf((char *)(buf + sizeof(struct Header)), PAYLOAD_SIZE, "%s", msg);
 
     struct sockaddr_in dest = {
         .sin_family = AF_INET,
@@ -177,17 +177,19 @@ static THREAD_RET THREAD_CALL receiver_thread(void *arg) {
 
                 switch (h->type) {
                     case TYPE_MSG:
-                        if (plen < PAYLOAD_SIZE) payload[plen] = '\0';
+                        if (plen > 0 && (size_t)plen < PAYLOAD_SIZE) payload[plen] = '\0';
                         printf("\n\033[1;36m>>> [MSG de %s] : %s\033[0m\n> ", from_ip, payload);
                         fflush(stdout);
                         break;
 
-                    case TYPE_FILE_START:
+                    case TYPE_FILE_START: {
+                        payload[PAYLOAD_SIZE - 1] = '\0';
                         printf("\n>>> [FICHIER de %s] : %s\n", from_ip, payload);
-                        char path[300] = "recu_";
-                        strncat(path, payload, 250);
+                        char path[300];
+                        snprintf(path, sizeof(path), "recu_%.*s", 250, payload);
                         f_recv = fopen(path, "wb");
                         break;
+                    }
 
                     case TYPE_FILE_DATA:
                         if (f_recv) fwrite(payload, 1, plen, f_recv);
@@ -268,7 +270,7 @@ static void register_to_server(void) {
     struct RegisterPacket pkt;
     memset(&pkt, 0, sizeof(pkt));
     pkt.header.type = REG_REGISTER;
-    strncpy(pkt.name, g_my_name, MAX_NAME_LEN - 1);
+    snprintf(pkt.name, MAX_NAME_LEN, "%s", g_my_name);
     pkt.comm_port = htons(PORT_COMM);
 
     struct sockaddr_in srv = {
@@ -306,7 +308,7 @@ int main(int argc, char *argv[]) {
     printf("\n=== CLIENT DE COMMUNICATION ===\n");
     printf("Serveur : %s\n\n", g_server_ip);
     printf("Ton pseudo : ");
-    fgets(g_my_name, MAX_NAME_LEN, stdin);
+    { char *_r = fgets(g_my_name, MAX_NAME_LEN, stdin); (void)_r; }
     g_my_name[strcspn(g_my_name, "\r\n")] = '\0';
     if (strlen(g_my_name) == 0) strncpy(g_my_name, "Anonyme", MAX_NAME_LEN - 1);
 
@@ -378,7 +380,7 @@ int main(int argc, char *argv[]) {
                 }
                 char msg[PAYLOAD_SIZE];
                 printf("Message : ");
-                fgets(msg, PAYLOAD_SIZE, stdin);
+                { char *_r = fgets(msg, PAYLOAD_SIZE, stdin); (void)_r; }
                 msg[strcspn(msg, "\r\n")] = '\0';
                 send_message_to(target_ip, msg);
                 break;
@@ -390,7 +392,7 @@ int main(int argc, char *argv[]) {
                 }
                 char path[256];
                 printf("Chemin du fichier : ");
-                fgets(path, sizeof(path), stdin);
+                { char *_r = fgets(path, sizeof(path), stdin); (void)_r; }
                 path[strcspn(path, "\r\n")] = '\0';
                 send_file_to(target_ip, path);
                 break;
@@ -415,7 +417,7 @@ int main(int argc, char *argv[]) {
             }
             case 5:
                 printf("IP : ");
-                scanf("%15s", target_ip);
+                { int _r = scanf("%15s", target_ip); (void)_r; }
                 getchar();
                 printf("[✓] Cible : %s\n", target_ip);
                 break;

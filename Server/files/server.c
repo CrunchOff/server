@@ -378,17 +378,17 @@ static void *thread_registry(void *arg) {
                 int idx = find_client_by_ip(client_ip);
                 if (idx < 0 && g_client_count < MAX_CLIENTS) {
                     idx = g_client_count++;
-                    strncpy(g_clients[idx].ip, client_ip, MAX_IP_LEN - 1);
+                    snprintf(g_clients[idx].ip, MAX_IP_LEN, "%s", client_ip);
                 }
                 if (idx >= 0) {
-                    strncpy(g_clients[idx].name, reg->name, MAX_NAME_LEN - 1);
+                    snprintf(g_clients[idx].name, MAX_NAME_LEN, "%.*s", MAX_NAME_LEN - 1, reg->name);
                     g_clients[idx].port = ntohs(reg->comm_port);
                     g_clients[idx].last_seen = now_sec();
                 }
                 pthread_mutex_unlock(&g_clients_mutex);
 
                 char logbuf[80];
-                snprintf(logbuf, sizeof(logbuf), "Enregistré : %s (%s)", reg->name, client_ip);
+                snprintf(logbuf, sizeof(logbuf), "Enregistre : %.20s (%.15s)", reg->name, client_ip);
                 log_msg("REGISTRY", logbuf);
 
                 notify_all(sock, reg->name, client_ip, 1);
