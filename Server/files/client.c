@@ -300,6 +300,9 @@ int main(int argc, char *argv[]) {
 #ifdef _WIN32
     WSADATA wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
+    // Enable UTF-8 output on Windows console for proper box-drawing characters
+    SetConsoleCP(65001);
+    SetConsoleOutputCP(65001);
 #endif
 
     if (argc > 1) strncpy(g_server_ip, argv[1], MAX_IP_LEN - 1);
